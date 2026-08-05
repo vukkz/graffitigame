@@ -41,3 +41,8 @@ desktop.ini
 .vscode/
 .idea/
 *.swp
+
+# ─── Claude Code ──────────────────────────────────────────────────────────
+# Per-machine permission settings — must not be shared across machines.
+# (.claude/settings.json, if you ever create one, IS meant to be shared.)
+.claude/settings.local.json
