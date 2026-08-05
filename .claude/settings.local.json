@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /Users/macbookair/Documents/graffitigame/docs)",
+      "Bash(cp /Users/macbookair/.claude/plans/i-want-to-build-clever-robin.md /Users/macbookair/Documents/graffitigame/docs/GDD.md)",
+      "Bash(command -v git-lfs)",
+      "Bash(git lfs *)",
+      "Bash(command -v brew)",
+      "Bash(brew --version)"
+    ]
+  }
+}

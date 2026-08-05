@@ -1,0 +1,48 @@
+# ─── Git LFS ──────────────────────────────────────────────────────────────
+# Binary assets go to LFS. This MUST be in place before the first commit —
+# retrofitting LFS onto a repo that already has binary history is painful.
+#
+# Run once per machine:  git lfs install
+# Verify tracking with:  git lfs track
+
+# Textures & images
+*.png    filter=lfs diff=lfs merge=lfs -text
+*.jpg    filter=lfs diff=lfs merge=lfs -text
+*.jpeg   filter=lfs diff=lfs merge=lfs -text
+*.tga    filter=lfs diff=lfs merge=lfs -text
+*.psd    filter=lfs diff=lfs merge=lfs -text
+*.kra    filter=lfs diff=lfs merge=lfs -text
+*.exr    filter=lfs diff=lfs merge=lfs -text
+*.hdr    filter=lfs diff=lfs merge=lfs -text
+
+# Models
+*.blend  filter=lfs diff=lfs merge=lfs -text
+*.glb    filter=lfs diff=lfs merge=lfs -text
+*.fbx    filter=lfs diff=lfs merge=lfs -text
+*.obj    filter=lfs diff=lfs merge=lfs -text
+
+# Audio
+*.wav    filter=lfs diff=lfs merge=lfs -text
+*.ogg    filter=lfs diff=lfs merge=lfs -text
+*.mp3    filter=lfs diff=lfs merge=lfs -text
+*.flac   filter=lfs diff=lfs merge=lfs -text
+
+# Video
+*.mp4    filter=lfs diff=lfs merge=lfs -text
+*.webm   filter=lfs diff=lfs merge=lfs -text
+
+# Fonts
+*.ttf    filter=lfs diff=lfs merge=lfs -text
+*.otf    filter=lfs diff=lfs merge=lfs -text
+
+# ─── Text handling ────────────────────────────────────────────────────────
+# Godot writes LF. Force it so the Mac↔PC move doesn't churn every file.
+*        text=auto eol=lf
+*.gd     text eol=lf
+*.gdshader text eol=lf
+*.tscn   text eol=lf
+*.tres   text eol=lf
+*.godot  text eol=lf
+*.md     text eol=lf
+*.cfg    text eol=lf
+*.import text eol=lf

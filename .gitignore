@@ -1,0 +1,43 @@
+# ─── Godot 4 ──────────────────────────────────────────────────────────────
+.godot/
+.import/
+/android/
+*.translation
+
+# Export presets can contain local signing paths and (if you ever set one)
+# an encryption key. Ignored by default — but that means your export settings
+# are NOT backed up. Keep a copy somewhere if you care about them.
+export_presets.cfg
+export.cfg
+
+# Build output
+/build/
+/export/
+*.pck
+*.exe
+*.dmg
+*.app/
+
+# ─── Blender ──────────────────────────────────────────────────────────────
+*.blend1
+*.blend2
+*.blend@
+
+# ─── Audio / DAW working files ────────────────────────────────────────────
+*.reapeaks
+*.rpp-bak
+/audio/_raw/          # unedited field recordings — keep these outside git
+
+# ─── OS junk ──────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+
+# ─── Editors ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
