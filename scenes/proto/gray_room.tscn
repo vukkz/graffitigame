@@ -1,0 +1,139 @@
+[gd_scene format=3 uid="uid://b5er78peq4gbd"]
+
+[ext_resource type="Script" uid="uid://c252dbfkk62os" path="res://systems/player/fp_controller.gd" id="1_a1vmx"]
+[ext_resource type="Script" uid="uid://v30lcovxpps8" path="res://systems/interaction/door.gd" id="2_j5mff"]
+[ext_resource type="Script" uid="uid://bbmj0n87hlilr" path="res://systems/ui/pause_menu.gd" id="3_kkhyw"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_qdp0p"]
+sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+ground_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+
+[sub_resource type="Sky" id="Sky_a1vmx"]
+sky_material = SubResource("ProceduralSkyMaterial_qdp0p")
+
+[sub_resource type="Environment" id="Environment_j5mff"]
+background_mode = 2
+sky = SubResource("Sky_a1vmx")
+glow_enabled = true
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_cmnmx"]
+radius = 0.32
+height = 1.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_cmnmx"]
+size = Vector3(0.9, 2, 0.06)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_cmnmx"]
+size = Vector3(0.9, 2, 0.06)
+
+[node name="GrayRoom" type="Node3D" unique_id=122506792]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1372247123]
+environment = SubResource("Environment_j5mff")
+
+[node name="Floor" type="CSGBox3D" parent="." unique_id=2062404821]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+use_collision = true
+size = Vector3(12, 0.2, 8)
+
+[node name="WallBack" type="CSGBox3D" parent="." unique_id=456398376]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -4)
+use_collision = true
+size = Vector3(12, 4, 0.2)
+
+[node name="WallHole" type="CSGBox3D" parent="WallBack" unique_id=1731548603]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, -0.95, 0)
+operation = 2
+size = Vector3(1, 2.1, 0.5)
+
+[node name="WallFront" type="CSGBox3D" parent="." unique_id=1367651316]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 4)
+use_collision = true
+size = Vector3(12, 4, 0.2)
+
+[node name="WallLeft" type="CSGBox3D" parent="." unique_id=1938934341]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 2, 0)
+use_collision = true
+size = Vector3(0.2, 4, 8)
+
+[node name="WallRight" type="CSGBox3D" parent="." unique_id=1470094802]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 2, 0)
+use_collision = true
+size = Vector3(0.2, 4, 8)
+
+[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=1919635683]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 3.5, 0)
+light_energy = 2.0
+shadow_enabled = true
+omni_range = 20.0
+
+[node name="OmniLight3D2" type="OmniLight3D" parent="." unique_id=668423216]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 3.5, 0)
+light_energy = 2.0
+omni_range = 20.0
+
+[node name="Player" type="CharacterBody3D" parent="." unique_id=2026509378]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2)
+script = ExtResource("1_a1vmx")
+
+[node name="Collision" type="CollisionShape3D" parent="Player" unique_id=1419986904]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_cmnmx")
+
+[node name="Head" type="Node3D" parent="Player" unique_id=2061338285]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.66, 0)
+
+[node name="Camera" type="Camera3D" parent="Player/Head" unique_id=911139657]
+
+[node name="Interactor" type="RayCast3D" parent="Player/Head/Camera" unique_id=2132278125]
+target_position = Vector3(0, 0, -3)
+
+[node name="CeilingCheck" type="RayCast3D" parent="Player" unique_id=1288309424]
+
+[node name="Door" type="AnimatableBody3D" parent="." unique_id=350204276]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.45, 0, -4)
+script = ExtResource("2_j5mff")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Door" unique_id=464006736]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 1, 0)
+mesh = SubResource("BoxMesh_cmnmx")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Door" unique_id=1997274837]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 1, 0)
+shape = SubResource("BoxShape3D_cmnmx")
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=773225097]
+process_mode = 3
+script = ExtResource("3_kkhyw")
+
+[node name="PauseMenu" type="PanelContainer" parent="UI" unique_id=1329256278]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -33.5
+offset_top = -46.5
+offset_right = 33.5
+offset_bottom = 46.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/PauseMenu" unique_id=2113229733]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="UI/PauseMenu/VBoxContainer" unique_id=1117550208]
+layout_mode = 2
+text = "PAUZA"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Resume" type="Button" parent="UI/PauseMenu/VBoxContainer" unique_id=1184674838]
+layout_mode = 2
+text = "Nastavi"
+
+[node name="Quit" type="Button" parent="UI/PauseMenu/VBoxContainer" unique_id=32128295]
+layout_mode = 2
+text = "Izadji"
+
+[connection signal="pressed" from="UI/PauseMenu/VBoxContainer/Resume" to="UI" method="_on_resume_pressed"]
