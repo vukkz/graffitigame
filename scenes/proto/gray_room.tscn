@@ -2,7 +2,14 @@
 
 [ext_resource type="Script" uid="uid://c252dbfkk62os" path="res://systems/player/fp_controller.gd" id="1_a1vmx"]
 [ext_resource type="Script" uid="uid://v30lcovxpps8" path="res://systems/interaction/door.gd" id="2_j5mff"]
+[ext_resource type="Script" uid="uid://dwyk3rccvaquh" path="res://systems/paint/spray_cap.gd" id="3_g4cii"]
 [ext_resource type="Script" uid="uid://bbmj0n87hlilr" path="res://systems/ui/pause_menu.gd" id="3_kkhyw"]
+[ext_resource type="PackedScene" path="res://scenes/proto/paint_wall.tscn" id="4_paint"]
+[ext_resource type="Script" uid="uid://dtpiqhqa6bxow" path="res://systems/paint/spray_can.gd" id="5_can"]
+[ext_resource type="Resource" uid="uid://b3d5ioq1fnadn" path="res://systems/paint/caps/skinny.tres" id="6_skinny"]
+[ext_resource type="Resource" uid="uid://c3yu54c6xnobt" path="res://systems/paint/caps/fat.tres" id="7_fat"]
+[ext_resource type="Script" uid="uid://bwdjlommb1dcc" path="res://systems/ui/paint_palette.gd" id="8_palette"]
+[ext_resource type="Script" uid="uid://bo5g661undbfo" path="res://systems/audio/can_audio.gd" id="9_audio"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_qdp0p"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -88,6 +95,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.66, 0)
 [node name="Interactor" type="RayCast3D" parent="Player/Head/Camera" unique_id=2132278125]
 target_position = Vector3(0, 0, -3)
 
+[node name="SprayCan" type="Node3D" parent="Player/Head/Camera" unique_id=1256905572]
+script = ExtResource("5_can")
+can_color = Color(0.79879683, 0.2817027, 0.7481217, 1)
+caps = Array[ExtResource("3_g4cii")]([ExtResource("6_skinny"), ExtResource("7_fat")])
+cap_label_path = NodePath("../../../../UI/CapLabel")
+
+[node name="Ray" type="RayCast3D" parent="Player/Head/Camera/SprayCan" unique_id=1296732117]
+target_position = Vector3(0, 0, -5)
+
+[node name="CanAudio" type="Node3D" parent="Player/Head/Camera/SprayCan" unique_id=1194517667]
+script = ExtResource("9_audio")
+spray_can_path = NodePath("..")
+
 [node name="CeilingCheck" type="RayCast3D" parent="Player" unique_id=1288309424]
 
 [node name="Door" type="AnimatableBody3D" parent="." unique_id=350204276]
@@ -102,9 +122,58 @@ mesh = SubResource("BoxMesh_cmnmx")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 1, 0)
 shape = SubResource("BoxShape3D_cmnmx")
 
+[node name="PaintWall" parent="." unique_id=1919541207 instance=ExtResource("4_paint")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.6, -3.88)
+wall_grain = null
+grain_scale = null
+drip_after_seconds = 0.7
+
 [node name="UI" type="CanvasLayer" parent="." unique_id=773225097]
 process_mode = 3
 script = ExtResource("3_kkhyw")
+
+[node name="Crosshair" type="ColorRect" parent="UI" unique_id=762091896]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 2.0
+offset_bottom = 2.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 0.65)
+
+[node name="Palette" type="Control" parent="UI" unique_id=260236572]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("8_palette")
+spray_can_path = NodePath("../../Player/Head/Camera/SprayCan")
+
+[node name="CapLabel" type="Label" parent="UI" unique_id=1443060706]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -140.0
+offset_top = -46.0
+offset_right = -18.0
+offset_bottom = -18.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "Skinny"
+horizontal_alignment = 2
+vertical_alignment = 1
 
 [node name="PauseMenu" type="PanelContainer" parent="UI" unique_id=1329256278]
 anchors_preset = 8

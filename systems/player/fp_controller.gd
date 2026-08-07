@@ -17,6 +17,15 @@ extends CharacterBody3D
 @export var air_accel := 2.5
 @export var jump_velocity := 5.0
 
+@export_group("Painting stance")
+## Walking speed while painting. Full walk speed is ~4x this, which is fine for crossing
+## a rooftop and useless for the 10 cm adjustments a letter needs — one tap of W at
+## normal speed moves you half a letter, and there is no way to nudge.
+@export var paint_walk_speed := 0.8
+## Mouse sensitivity multiplier while painting. Your hand does finer work at a wall than
+## it does scanning a street, and the same number cannot serve both.
+@export_range(0.1, 1.0, 0.05) var paint_look_scale := 0.7
+
 @export_group("Body")
 @export var stand_height := 1.80
 @export var crouch_height := 1.10
@@ -38,6 +47,11 @@ var _capsule: CapsuleShape3D
 var _pitch := 0.0
 var _height := 0.0
 var _wants_crouch := false
+var _stance := false
+
+## Emitted when the player settles into or out of painting stance. The can listens to
+## reposition itself; the HUD listens to show the palette.
+signal stance_changed(active: bool)
 
 
 func _ready() -> void:
@@ -52,9 +66,12 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and _mouse_captured():
-		rotate_y(-event.relative.x * mouse_sensitivity)
+		var sensitivity := mouse_sensitivity
+		if _stance:
+			sensitivity *= paint_look_scale
+		rotate_y(-event.relative.x * sensitivity)
 		_pitch = clampf(
-			_pitch - event.relative.y * mouse_sensitivity,
+			_pitch - event.relative.y * sensitivity,
 			-deg_to_rad(pitch_limit_deg),
 			deg_to_rad(pitch_limit_deg),
 		)
@@ -64,6 +81,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("interact"):
 		_try_interact()
+	elif event.is_action_pressed("paint_stance"):
+		set_painting_stance(not _stance)
 
 
 func _try_interact() -> void:
@@ -83,9 +102,17 @@ func _physics_process(delta: float) -> void:
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var wish := (transform.basis * Vector3(input.x, 0.0, input.y)).normalized()
 
-	var speed := crouch_speed if _is_crouched() else (
-		sprint_speed if Input.is_action_pressed("sprint") else walk_speed
-	)
+	# Reaching for sprint is the clearest possible statement that you are done painting.
+	if _stance and Input.is_action_just_pressed("sprint"):
+		set_painting_stance(false)
+
+	var speed := walk_speed
+	if _stance:
+		speed = paint_walk_speed
+	elif _is_crouched():
+		speed = crouch_speed
+	elif Input.is_action_pressed("sprint"):
+		speed = sprint_speed
 	var accel := ground_accel if is_on_floor() else air_accel
 	var planar := Vector3(velocity.x, 0.0, velocity.z)
 	planar = planar.lerp(wish * speed, clampf(accel * delta, 0.0, 1.0))
@@ -93,6 +120,22 @@ func _physics_process(delta: float) -> void:
 	velocity.z = planar.z
 
 	move_and_slide()
+
+
+## Settle into (or out of) painting stance: slow, fine movement and a finer look.
+##
+## Painting and walking are different activities that happen to share a keyboard. One
+## speed cannot serve both — quick enough to cross a rooftop is far too coarse to place
+## a letter, and slow enough to place a letter makes the rest of the game a slog.
+func set_painting_stance(active: bool) -> void:
+	if _stance == active:
+		return
+	_stance = active
+	stance_changed.emit(_stance)
+
+
+func is_painting_stance() -> bool:
+	return _stance
 
 
 ## Highest point the player can comfortably paint, in world space. M1 uses this to

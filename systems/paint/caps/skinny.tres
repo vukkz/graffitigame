@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SprayCap" format=3 uid="uid://b3d5ioq1fnadn"]
+
+[ext_resource type="Script" uid="uid://dwyk3rccvaquh" path="res://systems/paint/spray_cap.gd" id="1_cap"]
+
+[resource]
+script = ExtResource("1_cap")
+display_name = "Skinny"
+cone_half_angle_deg = 2.2
+nozzle_radius = 0.006
+seconds_to_solid = 0.035
+falloff = 2.0
+overspray_radius_mult = 2.4
+overspray_share = 0.13
+overspray_falloff = 1.1

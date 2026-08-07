@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SprayCap" format=3 uid="uid://c3yu54c6xnobt"]
+
+[ext_resource type="Script" uid="uid://dwyk3rccvaquh" path="res://systems/paint/spray_cap.gd" id="1_cap"]
+
+[resource]
+script = ExtResource("1_cap")
+display_name = "Fat"
+cone_half_angle_deg = 5.6
+nozzle_radius = 0.009
+seconds_to_solid = 0.022
+falloff = 1.4
+overspray_radius_mult = 2.0
+overspray_share = 0.18
+overspray_falloff = 0.9
