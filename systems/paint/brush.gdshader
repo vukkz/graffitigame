@@ -20,8 +20,23 @@ uniform vec4 paint_color : source_color = vec4(1.0);
 // Alpha at the dead centre of the cone this frame. The can computes it; see
 // spray_can.gd::_spray_tick().
 uniform float peak_alpha = 0.15;
-// Edge hardness. 1.0 is a soft cloud, 4.0 is a crisp disc.
+// Edge hardness of the SHOULDER — the shell outside the plateau. 1.0 is a soft cloud,
+// 4.0 is a crisp disc.
 uniform float falloff : hint_range(0.2, 8.0) = 2.4;
+// Fraction of the radius that comes out at FULL strength before the shoulder starts.
+//
+// This is the difference between paint and crayon. A pure pow() falloff peaks at a
+// single point, so a moving stroke only ever saturates along its exact centreline and
+// everything either side is a ramp: at half a radius out one pass lands about 0.48
+// alpha, which composites over grey concrete as mid grey. A line with no body reads as
+// a wax crayon no matter what colour is in the can.
+//
+// A real cone has a core that is genuinely saturated and a shoulder where it breaks up.
+// Modelling that as a plateau means the same pass lands ~0.93 at half a radius instead.
+//
+// 0.0 reproduces the old pure-pow behaviour exactly, which is what makes this safe to
+// A/B against: set it to zero and you are back where you were.
+uniform float core_frac : hint_range(0.0, 0.95) = 0.5;
 
 // GDD 5.3 step 6: the wall fights back. Pits and rough aggregate take less paint than the
 // smooth patches beside them, so a first pass comes out mottled and it takes a second and
@@ -35,8 +50,8 @@ uniform float falloff : hint_range(0.2, 8.0) = 2.4;
 // the same rough spots resist every pass, so they stay visible until you bury them. Tie
 // it to the quad and it would just be per-stamp static.
 uniform vec2 buffer_size = vec2(2400.0, 1200.0);
-uniform float wall_grain : hint_range(0.0, 1.0) = 0.35;
-uniform float grain_scale = 260.0;
+uniform float wall_grain : hint_range(0.0, 1.0) = 0.15;
+uniform float grain_scale = 420.0;
 
 float hash21(vec2 p) {
 	p = fract(p * vec2(123.34, 456.21));
@@ -61,7 +76,11 @@ void fragment() {
 	// own rotation and non-uniform scale turn this circle into the angled ellipse of
 	// GDD 5.3 step 5 for free -- the shader never needs to know about the angle.
 	float d = length(UV - vec2(0.5)) * 2.0;
-	float mask = pow(max(1.0 - d, 0.0), falloff);
+	// Plateau out to core_frac, then the shoulder runs the remaining shell down to zero
+	// at the rim. The divide is what keeps the shoulder a full pow() curve instead of a
+	// clipped one, so `falloff` still means the same thing it always did.
+	float shoulder = clamp((1.0 - d) / max(1.0 - core_frac, 0.001), 0.0, 1.0);
+	float mask = pow(shoulder, falloff);
 
 	// The clamp is load-bearing, not defensive. Up close one frame can ask for far more
 	// than alpha 1.0, and blend_premul_alpha computes dst = src + dst * (1 - src.a) --

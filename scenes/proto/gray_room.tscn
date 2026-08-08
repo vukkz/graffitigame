@@ -10,6 +10,8 @@
 [ext_resource type="Resource" uid="uid://c3yu54c6xnobt" path="res://systems/paint/caps/fat.tres" id="7_fat"]
 [ext_resource type="Script" uid="uid://bwdjlommb1dcc" path="res://systems/ui/paint_palette.gd" id="8_palette"]
 [ext_resource type="Script" uid="uid://bo5g661undbfo" path="res://systems/audio/can_audio.gd" id="9_audio"]
+[ext_resource type="Resource" path="res://systems/paint/caps/banana.tres" id="10_banana"]
+[ext_resource type="Resource" path="res://systems/paint/caps/medium.tres" id="11_medium"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_qdp0p"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -98,7 +100,7 @@ target_position = Vector3(0, 0, -3)
 [node name="SprayCan" type="Node3D" parent="Player/Head/Camera" unique_id=1256905572]
 script = ExtResource("5_can")
 can_color = Color(0.79879683, 0.2817027, 0.7481217, 1)
-caps = Array[ExtResource("3_g4cii")]([ExtResource("6_skinny"), ExtResource("7_fat")])
+caps = Array[ExtResource("3_g4cii")]([ExtResource("10_banana"), ExtResource("6_skinny"), ExtResource("11_medium"), ExtResource("7_fat")])
 cap_label_path = NodePath("../../../../UI/CapLabel")
 
 [node name="Ray" type="RayCast3D" parent="Player/Head/Camera/SprayCan" unique_id=1296732117]
@@ -124,8 +126,8 @@ shape = SubResource("BoxShape3D_cmnmx")
 
 [node name="PaintWall" parent="." unique_id=1919541207 instance=ExtResource("4_paint")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.6, -3.88)
-wall_grain = null
-grain_scale = null
+wall_grain = 0.35
+grain_scale = 260.0
 drip_after_seconds = 0.7
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=773225097]

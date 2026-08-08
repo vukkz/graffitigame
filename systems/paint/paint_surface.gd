@@ -88,9 +88,16 @@ const WALL_SHADER: Shader = preload("res://systems/paint/wall_surface.gdshader")
 @export_group("Surface")
 ## How hard the wall resists paint (§5.3 step 6). 0 is a smooth canvas; at 0.35 a first
 ## pass comes out mottled and it takes two or three to bury the texture.
-@export_range(0.0, 1.0, 0.01) var wall_grain := 0.35
-## Size of the aggregate. Higher is finer grit, lower is coarse blockwork.
-@export var grain_scale := 260.0
+##
+## 0.35 at the old 2.3 cm grain was too much of both: coarse enough to read as paper
+## tooth and strong enough that a single black outline came out streaky rather than
+## solid. Together that is most of what makes paint look like crayon. Tooth is still
+## wanted — a wall that takes paint like canvas is the other failure — so this is turned
+## down rather than off, and the grit turned finer.
+@export_range(0.0, 1.0, 0.01) var wall_grain := 0.15
+## Size of the aggregate. Higher is finer grit, lower is coarse blockwork. 420 over a 6 m
+## wall is roughly 1.4 cm, about right for rendered concrete.
+@export var grain_scale := 420.0
 
 @export_group("Wetness")
 ## Seconds for fresh paint to dry back to matte (§5.1 says ~30).
@@ -185,7 +192,19 @@ class Stamp extends RefCounted:
 	var stretch := 1.0  ## Ellipse elongation caused by a steep angle.
 	var stretch_angle := 0.0  ## Direction of that elongation, radians, in buffer space.
 	var peak_alpha := 0.1  ## Alpha at the centre of the cone.
-	var falloff := 2.4  ## Edge hardness. Higher is crisper.
+	var falloff := 2.4  ## Edge hardness of the shoulder. Higher is crisper.
+	## Fraction of the radius laid at full peak before the shoulder starts. This is what
+	## gives a line a solid body instead of a single saturated centreline; 0.0 is a pure
+	## falloff curve. Overspray uses 0.0 — dust has no core.
+	var core_frac := 0.0
+	## How mottled this stamp is. Negative means "use the wall's own wall_grain", which is
+	## what the core wants: it is being resisted by the concrete. Overspray overrides it,
+	## because its speckle is the PAINT breaking up in the air, not the wall fighting back
+	## — same noise field, different cause, and it needs to be much stronger.
+	var grain := -1.0
+	## Multiplies the wall's grain_scale. Overspray uses a finer field so it reads as grit
+	## rather than as blotches.
+	var grain_scale_mult := 1.0
 	var color := Color.WHITE
 	var spacing := 0.3  ## Gap between quads along the stroke, as a fraction of radius.
 	## Whether this feeds the drip solver's thickness grid. False for overspray (haze
@@ -546,9 +565,14 @@ func _draw_stamp(stamp: Stamp, first: int, texels: Vector2) -> int:
 		mat.set_shader_parameter("paint_color", stamp.color)
 		mat.set_shader_parameter("peak_alpha", alpha)
 		mat.set_shader_parameter("falloff", stamp.falloff)
+		mat.set_shader_parameter("core_frac", stamp.core_frac)
 		mat.set_shader_parameter("buffer_size", texels)
-		mat.set_shader_parameter("wall_grain", wall_grain)
-		mat.set_shader_parameter("grain_scale", grain_scale)
+		mat.set_shader_parameter(
+			"wall_grain", wall_grain if stamp.grain < 0.0 else stamp.grain
+		)
+		mat.set_shader_parameter(
+			"grain_scale", grain_scale * stamp.grain_scale_mult
+		)
 
 		# The same quad again, in the PaintData buffer. Position, rotation and scale are
 		# copied rather than recomputed so the two buffers cannot drift apart.

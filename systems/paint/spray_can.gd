@@ -62,9 +62,15 @@ signal emptied()
 @export_range(0.0, 1.0, 0.01) var sputter_jitter := 0.7
 
 @export_group("Paint")
-## Seconds of continuous spraying in a full can. A separate, slower resource than
-## pressure (§5.3 step 9) — at zero the can is dead and you throw it away.
-@export var volume_seconds := 75.0
+## Seconds of continuous spraying in a full can, WITH A SKINNY CAP. A separate, slower
+## resource than pressure (§5.3 step 9) — at zero the can is dead and you throw it away.
+##
+## Divided by the cap's `drain_rate`, so this is the top of the range and the fat cap
+## sits at the bottom of it. A real 400 ml can gives 200–300 s of continuous trigger;
+## this is deliberately past that, because §7.1 makes paint scarce through what it COSTS
+## rather than through running dry mid-letter, and being cut off halfway through a fill
+## is the least interesting way a piece can go wrong.
+@export var volume_seconds := 380.0
 
 @export_group("Shake")
 ## How well mixed the can starts. Low on purpose: §5.5 makes under-shaking a legal move
@@ -148,6 +154,11 @@ signal emptied()
 @export_group("HUD")
 ## Optional Label showing the current cap. Gray-box scaffolding; §9's real HUD replaces it.
 @export var cap_label_path: NodePath
+
+## Multiplies the wall's grain_scale for the overspray stamp. Airborne paint breaks up
+## much finer than concrete aggregate, and matching the two makes the powder read as part
+## of the wall instead of as something the can did.
+const OVERSPRAY_GRAIN_SCALE := 1.8
 
 @onready var _ray: RayCast3D = $Ray
 
@@ -257,10 +268,16 @@ func _physics_process(delta: float) -> void:
 
 	if held:
 		# §5.3 step 9. Two resources at two speeds: pressure sags in seconds and a shake
-		# brings it back; paint takes a minute and never comes back at all.
-		_pressure = maxf(_pressure - delta / maxf(pressure_seconds, 0.01), 0.0)
+		# brings it back; paint takes minutes and never comes back at all.
+		#
+		# Both are scaled by the cap, because the cap is the hole the paint leaves
+		# through. See SprayCap.drain_rate for why pressure takes the square root.
+		var drain: float = maxf(cap().drain_rate, 0.01)
+		_pressure = maxf(
+			_pressure - delta * sqrt(drain) / maxf(pressure_seconds, 0.01), 0.0
+		)
 		var was_empty := _volume <= 0.0
-		_volume = maxf(_volume - delta / maxf(volume_seconds, 0.01), 0.0)
+		_volume = maxf(_volume - delta * drain / maxf(volume_seconds, 0.01), 0.0)
 		if _volume <= 0.0 and not was_empty:
 			emptied.emit()
 
@@ -466,8 +483,11 @@ func _spray_tick(delta: float) -> void:
 	core.stretch = stretch
 	core.stretch_angle = angle
 	core.falloff = c.falloff
+	core.core_frac = c.core_frac
 	core.peak_alpha = (
-		deposit * (1.0 - c.overspray_share) * _falloff_normalisation(c.falloff)
+		deposit
+		* (1.0 - c.overspray_share)
+		* _cone_normalisation(c.falloff, c.core_frac)
 	)
 	core.color = can_color
 	core.spacing = stamp_spacing
@@ -478,8 +498,13 @@ func _spray_tick(delta: float) -> void:
 	core.absorb_rate = 3.0 / maxf(c.seconds_to_solid, 0.001)
 	surface.queue_stamp(core)
 
-	# §5.3 step 7. Same flow accounting: the haze's share of the paint, spread over a
-	# disc that is `mult` times wider and therefore mult² times larger in area.
+	# §5.3 step 7, but ONLY the far-field dust now. The soft edge of the line itself is
+	# the cone's own shoulder (SprayCap.core_frac), because that is bounded by the cone
+	# and is allowed to saturate; this stamp reaches metres and must never saturate at
+	# all. See SprayCap.overspray_share for why the two had to be separated.
+	#
+	# Same flow accounting as the core: the haze's share of the paint, spread over a disc
+	# that is `mult` times wider and therefore mult² times larger in area.
 	var haze := PaintSurface.Stamp.new()
 	haze.uv_from = _last_uv
 	haze.uv_to = uv
@@ -487,14 +512,21 @@ func _spray_tick(delta: float) -> void:
 	haze.stretch = stretch
 	haze.stretch_angle = angle
 	haze.falloff = c.overspray_falloff
+	# Flat falloff, no plateau: dust has no core. Passing 0.0 here is also what keeps this
+	# term identical to what it was before the plateau existed.
 	haze.peak_alpha = (
 		deposit
 		* c.overspray_share
 		/ (c.overspray_radius_mult * c.overspray_radius_mult)
-		* _falloff_normalisation(c.overspray_falloff)
+		* _cone_normalisation(c.overspray_falloff, 0.0)
 	)
 	haze.color = can_color
 	haze.spacing = stamp_spacing
+	# Powder is speckled where the core is smooth. Same noise field, different cause: the
+	# core is being resisted by the concrete, the powder is paint that broke up in the air
+	# before it landed. Finer scale so it reads as grit rather than as blotches.
+	haze.grain = c.overspray_grain
+	haze.grain_scale_mult = OVERSPRAY_GRAIN_SCALE
 	# Haze is a few microns of dust over a wide area. It never runs, so it must not feed
 	# the drip grid — counting it would make a slow wide pass drip as readily as a held
 	# trigger, which is exactly backwards.
@@ -554,7 +586,9 @@ func _cap_flow() -> float:
 	var c := cap()
 	var peak_per_second := 3.0 / maxf(c.seconds_to_solid, 0.001)
 	var r_ref := _cone_radius(reference_distance)
-	var deposit_to_peak := (1.0 - c.overspray_share) * _falloff_normalisation(c.falloff)
+	var deposit_to_peak := (
+		(1.0 - c.overspray_share) * _cone_normalisation(c.falloff, c.core_frac)
+	)
 	return peak_per_second * r_ref * r_ref / maxf(deposit_to_peak, 0.001)
 
 
@@ -570,14 +604,29 @@ func _stretch_angle(surface: PaintSurface, ray_dir: Vector3, normal: Vector3) ->
 
 
 ## A soft-edged brush puts less paint on the wall than a hard one of the same peak
-## alpha, because most of its disc is nearly empty. Integrating (1 − d/r)^k over the
-## disc comes to 2 / ((k+1)(k+2)) of a flat disc, so dividing that out keeps the total
-## constant when you change the cap's hardness.
+## alpha, because most of its disc is nearly empty. Dividing that out keeps the total
+## constant when you change the cap's shape.
 ##
 ## Without this, tuning `falloff` would quietly retune flow as well, and you would chase
 ## the two around in circles forever.
-func _falloff_normalisation(k: float) -> float:
-	return (k + 1.0) * (k + 2.0) * 0.5
+##
+## The profile is a plateau of radius `c` at full strength, then a (1 − d)^k shoulder
+## running to zero at the rim (see brush.gdshader). Its mean over the unit disc is
+##
+##     avg = c² + 2w/(k+1) − 2w²/(k+2),   w = 1 − c
+##
+## which at c = 0 collapses to the old 2/((k+1)(k+2)), so the pure-falloff case is
+## unchanged and `core_frac = 0` really is the previous behaviour.
+##
+## Note what this does NOT do: peak alpha stays pinned to `seconds_to_solid` whatever the
+## profile, because this factor cancels between here and _cap_flow(). Widening the core
+## therefore costs nothing at the centre — it only widens the part of the line that
+## reaches that centre value. That is why the plateau is a straight gain and not a trade.
+func _cone_normalisation(k: float, c: float) -> float:
+	var core := clampf(c, 0.0, 0.95)
+	var w := 1.0 - core
+	var avg := core * core + 2.0 * w / (k + 1.0) - 2.0 * w * w / (k + 2.0)
+	return 1.0 / maxf(avg, 0.0001)
 
 
 func _apply_cap() -> void:
