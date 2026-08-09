@@ -4,14 +4,6 @@
 
 [resource]
 script = ExtResource("1_cap")
-display_name = "Skinny"
 cone_half_angle_deg = 2.2
-nozzle_radius = 0.006
-seconds_to_solid = 0.035
-falloff = 2.0
-core_frac = 0.5
-overspray_radius_mult = 2.0
 overspray_share = 0.01
 overspray_grain = 0.65
-overspray_falloff = 1.1
-drain_rate = 1.0

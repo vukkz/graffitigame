@@ -27,6 +27,7 @@ export.cfg
 *.reapeaks
 *.rpp-bak
 /audio/_raw/          # unedited field recordings — keep these outside git
+audio/raw/
 
 # ─── OS junk ──────────────────────────────────────────────────────────────
 .DS_Store

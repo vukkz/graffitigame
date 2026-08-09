@@ -10,8 +10,8 @@
 [ext_resource type="Resource" uid="uid://c3yu54c6xnobt" path="res://systems/paint/caps/fat.tres" id="7_fat"]
 [ext_resource type="Script" uid="uid://bwdjlommb1dcc" path="res://systems/ui/paint_palette.gd" id="8_palette"]
 [ext_resource type="Script" uid="uid://bo5g661undbfo" path="res://systems/audio/can_audio.gd" id="9_audio"]
-[ext_resource type="Resource" path="res://systems/paint/caps/banana.tres" id="10_banana"]
-[ext_resource type="Resource" path="res://systems/paint/caps/medium.tres" id="11_medium"]
+[ext_resource type="Resource" uid="uid://dl4eyfuew7mnp" path="res://systems/paint/caps/banana.tres" id="10_banana"]
+[ext_resource type="Resource" uid="uid://7a2rke3yt32g" path="res://systems/paint/caps/medium.tres" id="11_medium"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_qdp0p"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)

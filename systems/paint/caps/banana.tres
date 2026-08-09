@@ -5,13 +5,11 @@
 [resource]
 script = ExtResource("1_cap")
 display_name = "Banana"
-cone_half_angle_deg = 1.6
 nozzle_radius = 0.005
 seconds_to_solid = 0.045
 falloff = 2.4
 core_frac = 0.55
 overspray_radius_mult = 1.9
 overspray_share = 0.005
-overspray_grain = 0.55
-overspray_falloff = 1.2
 drain_rate = 0.6
+overspray_falloff = 1.2
